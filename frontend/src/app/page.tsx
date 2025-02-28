@@ -1,101 +1,198 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import StartScreen from '../components/StartScreen';
+import ImageUpload from '../components/ImageUpload';
+import ClassificationResult from '../components/ClassificationResult';
+import WeightInput from '../components/WeightInput';
+import SummaryDisplay from '../components/SummaryDisplay';
+import { wasteAPI } from '../services/api';
+import {
+  AppState,
+  ClassificationResponse,
+  WeightSummaryResponse,
+  WasteCategory,
+} from '../types';
+
+const initialState: AppState = {
+  step: 'start',
+  currentImage: null,
+  currentClassification: null,
+  weightSummary: null,
+  isLoading: false,
+  error: null,
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [state, setState] = useState<AppState>(initialState);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    const fetchWeightSummary = async () => {
+      try {
+        const summary = await wasteAPI.getWeightSummary();
+        setState((prev) => ({ ...prev, weightSummary: summary }));
+      } catch (error) {
+        console.error('Error fetching weight summary:', error);
+      }
+    };
+
+    fetchWeightSummary();
+  }, []);
+
+  const handleStart = () => {
+    setState((prev) => ({ ...prev, step: 'upload' }));
+  };
+
+  const handleImageCapture = async (imageData: string) => {
+    setState((prev) => ({
+      ...prev,
+      currentImage: imageData,
+      isLoading: true,
+      error: null,
+    }));
+
+    try {
+      const result = await wasteAPI.classifyWaste(imageData);
+
+      setState((prev) => ({
+        ...prev,
+        currentClassification: result,
+        step: 'result',
+        isLoading: false,
+      }));
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: 'Failed to classify image. Please try again.',
+        isLoading: false,
+      }));
+    }
+  };
+
+  const handleContinueToWeight = () => {
+    setState((prev) => ({ ...prev, step: 'weight' }));
+  };
+
+  const handleRetry = () => {
+    setState((prev) => ({
+      ...prev,
+      currentImage: null,
+      currentClassification: null,
+      step: 'upload',
+      error: null,
+    }));
+  };
+
+  const handleWeightSubmit = async (weight: number) => {
+    if (!state.currentClassification?.category) return;
+
+    setState((prev) => ({ ...prev, isLoading: true }));
+
+    try {
+      const summary = await wasteAPI.updateWeight({
+        category: state.currentClassification.category as WasteCategory,
+        weight,
+      });
+
+      setState((prev) => ({
+        ...prev,
+        weightSummary: summary,
+        currentImage: null,
+        currentClassification: null,
+        step: 'upload',
+        isLoading: false,
+      }));
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: 'Failed to update weight. Please try again.',
+        isLoading: false,
+      }));
+    }
+  };
+
+  const handleStopSession = () => {
+    setState((prev) => ({ ...prev, step: 'start' }));
+  };
+
+  const handleWeightSummaryUpdate = (summary: WeightSummaryResponse) => {
+    setState((prev) => ({ ...prev, weightSummary: summary }));
+  };
+
+  const renderStepContent = () => {
+    switch (state.step) {
+      case 'start':
+        return (
+          <StartScreen
+            onStart={handleStart}
+            onWeightSummaryUpdate={handleWeightSummaryUpdate}
+          />
+        );
+
+      case 'upload':
+        return (
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-4">Upload Waste Image</h2>
+            <ImageUpload
+              onImageCapture={handleImageCapture}
+              isLoading={state.isLoading}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            {state.error && <p className="mt-4 text-red-600">{state.error}</p>}
+          </div>
+        );
+
+      case 'result':
+        return state.currentClassification ? (
+          <div className="text-center mb-8">
+            <ClassificationResult
+              result={state.currentClassification}
+              onNext={handleContinueToWeight}
+              onRetry={handleRetry}
+            />
+          </div>
+        ) : null;
+
+      case 'weight':
+        return state.currentClassification ? (
+          <div className="text-center mb-8">
+            <WeightInput
+              classification={state.currentClassification}
+              onWeightSubmit={handleWeightSubmit}
+              isLoading={state.isLoading}
+            />
+            {state.error && <p className="mt-4 text-red-600">{state.error}</p>}
+          </div>
+        ) : null;
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="container mx-auto">
+        <header className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold">Smart Waste Bin</h1>
+
+          {state.step !== 'start' && (
+            <button
+              onClick={handleStopSession}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+              Stop Session
+            </button>
+          )}
+        </header>
+
+        <div className="mb-8">{renderStepContent()}</div>
+
+        {state.weightSummary && (
+          <div className="mt-12">
+            <SummaryDisplay summary={state.weightSummary} />
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
