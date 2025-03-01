@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import numpy as np
@@ -8,7 +8,7 @@ import base64
 import cv2
 import time
 import os
-from ultralytics import YOLO
+from app.models.detection import ObjectDetector
 
 app = FastAPI(title="Smart Waste Classifier API")
 
@@ -21,98 +21,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the YOLO model (will download if not present)
-model = None
+# Initialize the YOLOv8 detector
+detector = None
 
 @app.on_event("startup")
 async def startup_event():
-    global model
+    global detector
     try:
-        # Load YOLOv8 model - we'll use a pre-trained model and fine-tune it
-        # For the prototype, we're using a standard YOLO model
-        # In a real implementation, you'd fine-tune on waste dataset
-        model = YOLO("yolov8n.pt")
-        print("Model loaded successfully")
+        # Initialize the object detector
+        detector = ObjectDetector(model_path="yolov8n.pt", confidence_threshold=0.25)
+        print("YOLOv8 model loaded successfully")
     except Exception as e:
-        print(f"Error loading model: {e}")
-
-# Custom mapping for waste categories
-# In a real application, this would be based on fine-tuned classes
-waste_categories = {
-    "cell phone": "E-waste",
-    "laptop": "E-waste",
-    "keyboard": "E-waste",
-    "mouse": "E-waste",
-    "remote": "E-waste",
-    "tv": "E-waste",
-    "bottle": "Non-organic",
-    "cup": "Non-organic",
-    "book": "Non-organic",
-    "paper": "Non-organic",
-    "plastic bag": "Non-organic",
-    "cardboard": "Non-organic",
-    "banana": "Organic (Vegetable and Fruit)",
-    "apple": "Organic (Vegetable and Fruit)",
-    "orange": "Organic (Vegetable and Fruit)",
-    "carrot": "Organic (Vegetable and Fruit)",
-    "broccoli": "Organic (Vegetable and Fruit)",
-    "sandwich": "Organic (Dairy and Meat)",
-    "hot dog": "Organic (Dairy and Meat)",
-    "pizza": "Organic (Dairy and Meat)",
-    "cake": "Organic (Dairy and Meat)",
-    "donut": "Organic (Dairy and Meat)",
-}
+        print(f"Error loading YOLOv8 model: {e}")
 
 @app.get("/")
 async def root():
     return {"message": "Smart Waste Classifier API is running"}
 
-@app.post("/classify")
-async def classify_waste(file: UploadFile = File(...)):
+@app.post("/detect")
+async def detect_waste(file: UploadFile = File(...)):
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
     
     try:
         # Read image file
         contents = await file.read()
-        image = Image.open(io.BytesIO(contents))
         
-        # Convert PIL Image to cv2 format
-        img_array = np.array(image)
-        if len(img_array.shape) == 2:  # Grayscale image
-            img_array = cv2.cvtColor(img_array, cv2.COLOR_GRAY2BGR)
-        
-        # Run inference
-        if model is None:
+        # Run detection
+        if detector is None:
             raise HTTPException(status_code=500, detail="Model not loaded")
         
-        results = model(img_array)
-        result = results[0]  # Get the first result
+        detections = detector.detect_from_image(contents)
         
-        # Process detections
-        detections = []
-        for box in result.boxes:
-            cls_id = int(box.cls[0].item())
-            cls_name = result.names[cls_id]
-            confidence = float(box.conf[0].item())
-            
-            # Map to waste category if possible
-            waste_type = waste_categories.get(cls_name, "Unknown")
-            
-            # Only include detections with good confidence
-            if confidence > 0.5:
-                detections.append({
-                    "class_name": cls_name,
-                    "waste_category": waste_type,
-                    "confidence": confidence,
-                })
-        
-        # Return the top detection or "unknown" if nothing detected
+        # Return the detections
         if detections:
             detections.sort(key=lambda x: x["confidence"], reverse=True)
             top_detection = detections[0]
             
-            # Return all detections and highlight the top one
             return {
                 "success": True,
                 "top_detection": top_detection,
@@ -128,55 +73,26 @@ async def classify_waste(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
-@app.post("/classify-base64")
-async def classify_waste_base64(data: dict):
+@app.post("/detect-base64")
+async def detect_waste_base64(data: dict = Body(...)):
     if "image" not in data:
         raise HTTPException(status_code=400, detail="No image data provided")
     
     try:
-        # Extract base64 string and decode
-        base64_image = data["image"].split(",")[1] if "," in data["image"] else data["image"]
-        image_bytes = base64.b64decode(base64_image)
+        # Extract base64 string
+        base64_image = data["image"]
         
-        # Convert to PIL Image
-        image = Image.open(io.BytesIO(image_bytes))
-        
-        # Convert PIL Image to cv2 format
-        img_array = np.array(image)
-        if len(img_array.shape) == 2:  # Grayscale image
-            img_array = cv2.cvtColor(img_array, cv2.COLOR_GRAY2BGR)
-        
-        # Run inference
-        if model is None:
+        # Run detection
+        if detector is None:
             raise HTTPException(status_code=500, detail="Model not loaded")
         
-        results = model(img_array)
-        result = results[0]  # Get the first result
+        detections = detector.detect_from_base64(base64_image)
         
-        # Process detections
-        detections = []
-        for box in result.boxes:
-            cls_id = int(box.cls[0].item())
-            cls_name = result.names[cls_id]
-            confidence = float(box.conf[0].item())
-            
-            # Map to waste category if possible
-            waste_type = waste_categories.get(cls_name, "Unknown")
-            
-            # Only include detections with good confidence
-            if confidence > 0.5:
-                detections.append({
-                    "class_name": cls_name,
-                    "waste_category": waste_type,
-                    "confidence": confidence,
-                })
-        
-        # Return the top detection or "unknown" if nothing detected
+        # Return the detections
         if detections:
             detections.sort(key=lambda x: x["confidence"], reverse=True)
             top_detection = detections[0]
             
-            # Return all detections and highlight the top one
             return {
                 "success": True,
                 "top_detection": top_detection,
