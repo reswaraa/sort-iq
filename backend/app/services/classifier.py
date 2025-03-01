@@ -5,6 +5,9 @@ from PIL import Image
 from app.models.schemas import WasteCategory
 from transformers import AutoImageProcessor, TFAutoModelForImageClassification
 import tensorflow as tf
+from torchvision import models
+import torchvision.transforms as transforms
+import torch
 
 class WasteClassifier:
     """
@@ -13,8 +16,20 @@ class WasteClassifier:
     """
 
     def __init__(self):
-        # todo: load the model
-        
+        # E-waste segregation model
+        # Create the model architecture first
+        self.ewaste_model = models.resnet18(pretrained=False)
+    
+        # Adjust the final layer to match your number of classes (2 in this case: Battery and Metal)
+        num_classes = 2
+        self.ewaste_model.fc = torch.nn.Linear(self.ewaste_model.fc.in_features, num_classes)
+    
+        # Load the state dictionary
+        state_dict = torch.load("models/trained_resnet18.keras")
+        self.ewaste_model.load_state_dict(state_dict)
+        self.ewaste_model.eval()
+
+        #Organic waste segregation model
         self.organic_processor = AutoImageProcessor.from_pretrained(
             "Kaludi/food-category-classification-v2.0"
         )
@@ -55,7 +70,43 @@ class WasteClassifier:
     
     def classify(self, base64_image: str):
         try:
+            
+            # Divide the type of e-waste
             image = self.decode_image(base64_image)
+            category = None
+            transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+            image_tensor = transform(image).unsqueeze(0)
+            class_labels = ["Battery","Metal"]
+            with torch.no_grad():
+                outputs = self.ewaste_model(image_tensor)
+                probs = torch.nn.functional.softmax(outputs[0],dim=0)
+                predicted_ewaste_label = torch.argmax(probs).item()
+                confidence = probs[predicted_ewaste_label].item()
+
+            predicted_ewaste_class = class_labels[predicted_ewaste_label]
+            useful_ewaste = ["Battery"]
+            non_useful_ewaste = ["Metal"]
+
+            if predicted_ewaste_class in useful_ewaste:
+                category = WasteCategory.E_WASTE_USEFUL
+            else:
+                category = WasteCategory.E_WASTE_NOT_USEFUL
+            
+            return {
+                "category": category,
+                "confidence": confidence,
+                "recyclable": self.recyclable_map[category],
+                "error": None
+            }
+            
+
+            """
+            #Divide organic compost and organic biogas
             inputs = self.organic_processor(images = image, return_tensors='tf')
             outputs = self.organic_model(**inputs)
             probs = tf.nn.softmax(outputs.logits,axis=-1)
@@ -76,7 +127,8 @@ class WasteClassifier:
                 "recyclable": self.recyclable_map[category],
                 "error": None
             }
-            
+            """
+
         except Exception as e:
             return {
                 "category": None,

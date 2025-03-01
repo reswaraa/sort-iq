@@ -43,7 +43,7 @@ export const getCategoryLabel = (category: WasteCategory | null): string => {
 
   switch (category) {
     case WasteCategory.E_WASTE_USEFUL:
-      return 'Electronic Waste';
+      return 'Usable Electronic Waste';
     case WasteCategory.E_WASTE_NOT_USEFUL:
       return 'Non-usable Electronic Waste';
     case WasteCategory.NON_ORGANIC:
