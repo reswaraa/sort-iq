@@ -65,6 +65,7 @@ export default function Home() {
         error: 'Failed to classify image. Please try again.',
         isLoading: false,
       }));
+      console.log('Error classifying image:', error);
     }
   };
 
@@ -107,6 +108,7 @@ export default function Home() {
         error: 'Failed to update weight. Please try again.',
         isLoading: false,
       }));
+      console.log('Error updating weight:', error);
     }
   };
 

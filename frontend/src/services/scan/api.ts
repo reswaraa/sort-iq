@@ -35,6 +35,8 @@ export const classifyWasteFromBase64 = async (
   }
 };
 
-export default {
+const apiService = {
   classifyWasteFromBase64,
 };
+
+export default apiService;

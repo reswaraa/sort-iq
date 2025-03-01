@@ -9,7 +9,6 @@ export default function Home() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [result, setResult] = useState<ClassificationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [useBackend, setUseBackend] = useState(false);
 
   const handleStartDetection = () => {
     setIsDetecting(true);
@@ -71,8 +70,7 @@ export default function Home() {
               <WebcamDetection
                 onDetection={handleDetection}
                 isDetecting={isDetecting}
-                useBackend={useBackend}
-                detectionInterval={500}
+                useBackend={false}
               />
             </div>
 
