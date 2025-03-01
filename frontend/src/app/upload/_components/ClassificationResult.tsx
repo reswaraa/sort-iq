@@ -16,7 +16,7 @@ const ClassificationResult: React.FC<ClassificationResultProps> = ({
   onNext,
   onRetry,
 }) => {
-  const isConfident = result.confidence >= 0.75;
+  const isConfident = result.confidence >= 0.7;
 
   const confidencePercentage = (result.confidence * 100).toFixed(1);
 
