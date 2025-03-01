@@ -57,7 +57,7 @@ const Navbar = () => {
             <Link
               href="/upload"
               className={`text-gray-600 hover:text-green-600 transition duration-300 ${
-                pathname === '/database' ? 'text-green-600 font-semibold' : ''
+                pathname === '/upload' ? 'text-green-600 font-semibold' : ''
               }`}
             >
               Static Waste Classification

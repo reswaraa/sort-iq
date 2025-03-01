@@ -6,8 +6,12 @@ import ImageUpload from './_components/ImageUpload';
 import ClassificationResult from './_components/ClassificationResult';
 import WeightInput from './_components/WeightInput';
 import SummaryDisplay from './_components/SummaryDisplay';
-import { wasteAPI } from '../../services/api';
-import { AppState, WeightSummaryResponse, WasteCategory } from '../../types';
+import { wasteAPI } from '@/services/upload/api';
+import {
+  AppState,
+  WeightSummaryResponse,
+  WasteCategory,
+} from '@/types/upload/index';
 
 const initialState: AppState = {
   step: 'start',

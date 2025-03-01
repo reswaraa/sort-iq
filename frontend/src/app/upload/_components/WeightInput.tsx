@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import {
-  ClassificationResponse,
-  WasteCategory,
-  getCategoryLabel,
-} from '../../../types';
+import { ClassificationResponse, getCategoryLabel } from '@/types/upload/index';
 
 interface WeightInputProps {
   classification: ClassificationResponse;

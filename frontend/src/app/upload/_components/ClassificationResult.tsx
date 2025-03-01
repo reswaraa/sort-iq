@@ -3,7 +3,7 @@ import {
   ClassificationResponse,
   getCategoryLabel,
   getCategoryColor,
-} from '../../../types';
+} from '@/types/upload/index';
 
 interface ClassificationResultProps {
   result: ClassificationResponse;

@@ -4,7 +4,7 @@ import {
   WeightSummaryResponse,
   getCategoryLabel,
   getCategoryColor,
-} from '../../../types';
+} from '@/types/upload/index';
 
 interface SummaryDisplayProps {
   summary: WeightSummaryResponse;

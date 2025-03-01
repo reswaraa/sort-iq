@@ -1,6 +1,6 @@
 import React from 'react';
-import { wasteAPI } from '../../../services/api';
-import { WeightSummaryResponse } from '../../../types';
+import { wasteAPI } from '@/services/upload/api';
+import { WeightSummaryResponse } from '@/types/upload/index';
 
 interface StartScreenProps {
   onStart: () => void;
