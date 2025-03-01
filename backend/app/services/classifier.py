@@ -12,15 +12,7 @@ class WasteClassifier:
     """
     
     def __init__(self):
-        # todo: load the model
-        
-        self.organic_processor = AutoImageProcessor.from_pretrained(
-            "Kaludi/food-category-classification-v2.0"
-        )
-        self.organic_model = TFAutoModelForImageClassification.from_pretrained(
-            "Kaludi/food-category-classification-v2.0", from_pt = True
-        )
-        
+        # todo: load the model    
         
         self.categories = [
             WasteCategory.E_WASTE_USEFUL,
