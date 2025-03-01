@@ -1,9 +1,10 @@
 // Enum for waste categories
 export enum WasteCategory {
-  E_WASTE = 'e-waste',
+  E_WASTE_USEFUL = 'e-waste-useful',
+  E_WASTE_NOT_USEFUL = 'e-waste-not-useful',
   NON_ORGANIC = 'non-organic',
-  ORGANIC_VEGETABLE_FRUIT = 'organic-vegetable-fruit',
-  ORGANIC_DAIRY_MEAT = 'organic-dairy-meat',
+  BIOGAS = 'biogas',
+  COMPOST = 'compost',
 }
 
 // Classification response from the API
@@ -41,14 +42,16 @@ export const getCategoryLabel = (category: WasteCategory | null): string => {
   if (!category) return 'Unknown';
 
   switch (category) {
-    case WasteCategory.E_WASTE:
-      return 'Electronic Waste';
+    case WasteCategory.E_WASTE_USEFUL:
+      return 'Usable Electronic Waste';
+    case WasteCategory.E_WASTE_NOT_USEFUL:
+      return 'Non-usable Electronic Waste';
     case WasteCategory.NON_ORGANIC:
       return 'Non-organic Waste';
-    case WasteCategory.ORGANIC_VEGETABLE_FRUIT:
-      return 'Organic Waste (Vegetable/Fruit)';
-    case WasteCategory.ORGANIC_DAIRY_MEAT:
-      return 'Organic Waste (Dairy/Meat)';
+    case WasteCategory.BIOGAS:
+      return 'Biogas';
+    case WasteCategory.COMPOST:
+      return 'Compost';
     default:
       return 'Unknown';
   }
@@ -58,13 +61,15 @@ export const getCategoryColor = (category: WasteCategory | null): string => {
   if (!category) return 'gray';
 
   switch (category) {
-    case WasteCategory.E_WASTE:
+    case WasteCategory.E_WASTE_USEFUL:
       return 'red';
+    case WasteCategory.E_WASTE_NOT_USEFUL:
+      return 'yellow';
     case WasteCategory.NON_ORGANIC:
       return 'blue';
-    case WasteCategory.ORGANIC_VEGETABLE_FRUIT:
+    case WasteCategory.BIOGAS:
       return 'green';
-    case WasteCategory.ORGANIC_DAIRY_MEAT:
+    case WasteCategory.COMPOST:
       return 'orange';
     default:
       return 'gray';

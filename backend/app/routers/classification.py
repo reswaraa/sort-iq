@@ -14,10 +14,11 @@ router = APIRouter()
 
 # Store for weights
 weight_store: Dict[WasteCategory, float] = {
-    WasteCategory.E_WASTE: 0.0,
+    WasteCategory.E_WASTE_USEFUL: 0.0,
+    WasteCategory.E_WASTE_NOT_USEFUL: 0.0,
     WasteCategory.NON_ORGANIC: 0.0,
-    WasteCategory.ORGANIC_VEGETABLE_FRUIT: 0.0,
-    WasteCategory.ORGANIC_DAIRY_MEAT: 0.0
+    WasteCategory.BIOGAS: 0.0,
+    WasteCategory.COMPOST: 0.0
 }
 
 
