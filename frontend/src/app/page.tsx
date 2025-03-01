@@ -1,45 +1,48 @@
 'use client';
+
 import React, { useState, useCallback } from 'react';
 import Head from 'next/head';
-import WebcamCapture from '@/components/WebcamCapture';
+import WebcamDetection from '@/components/WebcamDetection';
 import ResultDisplay from '@/components/ResultDisplay';
-import { classifyWasteFromBase64 } from '@/services/api';
-import { ClassificationResponse } from '@/types';
+import { ClassificationResponse, Detection, WasteCategory } from '@/types';
 
 export default function Home() {
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [isClassifying, setIsClassifying] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
   const [result, setResult] = useState<ClassificationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [useBackend, setUseBackend] = useState(false); // Whether to use YOLOv8 backend
 
-  const handleStartCapture = () => {
-    setIsCapturing(true);
+  const handleStartDetection = () => {
+    setIsDetecting(true);
     setError(null);
   };
 
-  const handleStopCapture = () => {
-    setIsCapturing(false);
+  const handleStopDetection = () => {
+    setIsDetecting(false);
   };
 
-  const handleCapture = useCallback(
-    async (imageSrc: string) => {
-      if (isClassifying) return; // Don't overlap requests
+  const handleDetection = useCallback((detections: Detection[]) => {
+    if (detections.length === 0) {
+      setResult({
+        success: false,
+        message: 'No waste detected',
+      });
+      return;
+    }
 
-      try {
-        setIsClassifying(true);
-        const classificationResult = await classifyWasteFromBase64(imageSrc);
-        setResult(classificationResult);
-      } catch (error) {
-        console.error('Error classifying image:', error);
-        setError(
-          error instanceof Error ? error.message : 'Unknown error occurred'
-        );
-      } finally {
-        setIsClassifying(false);
-      }
-    },
-    [isClassifying]
-  );
+    // Sort detections by confidence
+    const sortedDetections = [...detections].sort(
+      (a, b) => b.confidence - a.confidence
+    );
+    const topDetection = sortedDetections[0];
+
+    setResult({
+      success: true,
+      top_detection: topDetection,
+      all_detections: sortedDetections,
+      message: `Classified as ${topDetection.waste_category} (from ${topDetection.class_name})`,
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -66,9 +69,11 @@ export default function Home() {
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
           <div className="p-4">
             <div className="mb-4">
-              <WebcamCapture
-                onCapture={handleCapture}
-                isCapturing={isCapturing}
+              <WebcamDetection
+                onDetection={handleDetection}
+                isDetecting={isDetecting}
+                useBackend={useBackend}
+                detectionInterval={500} // 2 FPS for backend detection to reduce API load
               />
             </div>
 
@@ -79,20 +84,20 @@ export default function Home() {
             )}
 
             <div className="mb-4">
-              <ResultDisplay result={result} isLoading={isClassifying} />
+              <ResultDisplay result={result} isLoading={false} />
             </div>
 
             <div className="flex justify-center">
-              {!isCapturing ? (
+              {!isDetecting ? (
                 <button
-                  onClick={handleStartCapture}
+                  onClick={handleStartDetection}
                   className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 >
                   Start Classifying
                 </button>
               ) : (
                 <button
-                  onClick={handleStopCapture}
+                  onClick={handleStopDetection}
                   className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 >
                   Stop Classifying
@@ -106,12 +111,12 @@ export default function Home() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
             Waste Categories
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="bg-white p-4 rounded-lg shadow">
-              <div className="w-12 h-12 bg-e-waste rounded-full mb-3 flex items-center justify-center">
+              <div className="w-12 h-12 bg-green-500 rounded-full mb-3 flex items-center justify-center text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-white"
+                  className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -120,22 +125,44 @@ export default function Home() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium mb-1">E-waste</h3>
+              <h3 className="text-lg font-medium mb-1">E-Waste (Useful)</h3>
               <p className="text-sm text-gray-600">
-                Electronic waste like batteries, phones, computers, and other
-                devices
+                Electronic waste that can be repaired or reused
               </p>
             </div>
 
             <div className="bg-white p-4 rounded-lg shadow">
-              <div className="w-12 h-12 bg-non-organic rounded-full mb-3 flex items-center justify-center">
+              <div className="w-12 h-12 bg-red-500 rounded-full mb-3 flex items-center justify-center text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-white"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium mb-1">E-Waste (Not Useful)</h3>
+              <p className="text-sm text-gray-600">
+                Electronic waste that needs special disposal
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow">
+              <div className="w-12 h-12 bg-blue-500 rounded-full mb-3 flex items-center justify-center text-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -148,18 +175,17 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium mb-1">Non-organic</h3>
+              <h3 className="text-lg font-medium mb-1">Non-Organic</h3>
               <p className="text-sm text-gray-600">
-                Plastics, paper, glass, cardboard, and other recyclable
-                materials
+                Materials like plastic, glass, or paper
               </p>
             </div>
 
             <div className="bg-white p-4 rounded-lg shadow">
-              <div className="w-12 h-12 bg-organic-vf rounded-full mb-3 flex items-center justify-center">
+              <div className="w-12 h-12 bg-yellow-500 rounded-full mb-3 flex items-center justify-center text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-white"
+                  className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -168,23 +194,21 @@ export default function Home() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium mb-1">
-                Organic (Veg & Fruit)
-              </h3>
+              <h3 className="text-lg font-medium mb-1">Biogas</h3>
               <p className="text-sm text-gray-600">
-                Plant-based food waste like fruit and vegetable scraps
+                Organic waste suitable for biogas production
               </p>
             </div>
 
             <div className="bg-white p-4 rounded-lg shadow">
-              <div className="w-12 h-12 bg-organic-dm rounded-full mb-3 flex items-center justify-center">
+              <div className="w-12 h-12 bg-lime-600 rounded-full mb-3 flex items-center justify-center text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-white"
+                  className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -193,15 +217,43 @@ export default function Home() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium mb-1">
-                Organic (Dairy & Meat)
-              </h3>
+              <h3 className="text-lg font-medium mb-1">Compost</h3>
               <p className="text-sm text-gray-600">
-                Animal products like meat, cheese, and other dairy waste
+                Plant-based waste suitable for composting
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-8 max-w-4xl mx-auto bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            How It Works
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-lg font-medium mb-2">
+                Real-time Object Detection
+              </h3>
+              <p className="text-gray-600">
+                Our smart bin uses TensorFlow.js and a pre-trained COCO-SSD
+                model to detect objects in real-time directly in your browser.
+                The model identifies common household items and classifies them
+                into appropriate waste categories.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-medium mb-2">
+                Color-coded Categories
+              </h3>
+              <p className="text-gray-600">
+                Each waste category is color-coded for easy identification. The
+                system draws bounding boxes around detected items and shows
+                confidence scores to indicate how certain the model is about its
+                classification.
               </p>
             </div>
           </div>
@@ -209,8 +261,8 @@ export default function Home() {
 
         <footer className="mt-16 text-center text-gray-500 text-sm">
           <p>
-            © {new Date().getFullYear()} Smart Waste Classifier - Built for the
-            Hackathon
+            © {new Date().getFullYear()} Sort-IQ Waste Classifier - Built for
+            the Hackathon
           </p>
         </footer>
       </main>
