@@ -15,7 +15,7 @@ app = FastAPI(title="Sort-IQ Waste Classifier API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development - restrict this in production
+    allow_origins=["https://sort-iq-git-main-resas-projects-58fc9a08.vercel.app"],  # For development - restrict this in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
