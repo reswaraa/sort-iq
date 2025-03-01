@@ -30,3 +30,6 @@ class WeightUpdateRequest(BaseModel):
 class WeightSummaryResponse(BaseModel):
     weights: Dict[WasteCategory, float]
     total_weight: float
+
+
+

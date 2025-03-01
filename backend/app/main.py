@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import classification
+from app.services.classifier import WasteClassifier
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(
     title="Smart Waste Bin API",
@@ -20,6 +24,15 @@ app.add_middleware(
 # Include routers
 app.include_router(classification.router, prefix="/api", tags=["Classification"])
 
+@app.on_event("startup")
+async def startup_event():
+    """Startup event to load the model."""
+    global classifier
+    try:
+        classifier = WasteClassifier()
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        raise
 
 @app.get("/")
 async def root():
