@@ -3,7 +3,7 @@ import io
 import random
 from PIL import Image
 from app.models.schemas import WasteCategory
-
+from transformers import AutoImageProcessor, TFAutoModelForImageClassification
 
 class WasteClassifier:
     """
@@ -13,19 +13,30 @@ class WasteClassifier:
     
     def __init__(self):
         # todo: load the model
+        
+        self.organic_processor = AutoImageProcessor.from_pretrained(
+            "Kaludi/food-category-classification-v2.0"
+        )
+        self.organic_model = TFAutoModelForImageClassification.from_pretrained(
+            "Kaludi/food-category-classification-v2.0", from_pt = True
+        )
+        
+        
         self.categories = [
-            WasteCategory.E_WASTE,
+            WasteCategory.E_WASTE_USEFUL,
+            WasteCategory.E_WASTE_NOT_USEFUL,
             WasteCategory.NON_ORGANIC,
-            WasteCategory.ORGANIC_VEGETABLE_FRUIT,
-            WasteCategory.ORGANIC_DAIRY_MEAT
+            WasteCategory.BIOGAS,
+            WasteCategory.COMPOST
         ]
         
         # Categories that are recyclable
         self.recyclable_map = {
-            WasteCategory.E_WASTE: True,
+            WasteCategory.E_WASTE_USEFUL: True,
+            WasteCategory.E_WASTE_NOT_USEFUL: False,
             WasteCategory.NON_ORGANIC: True,
-            WasteCategory.ORGANIC_VEGETABLE_FRUIT: True,
-            WasteCategory.ORGANIC_DAIRY_MEAT: False
+            WasteCategory.BIOGAS: True,
+            WasteCategory.COMPOST: False
         }
     
     def decode_image(self, base64_image: str) -> Image.Image:
