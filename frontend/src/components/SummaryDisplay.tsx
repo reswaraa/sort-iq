@@ -36,6 +36,8 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({ summary }) => {
         return "bg-green-500";
       case "orange":
         return "bg-orange-500";
+      case "yellow":
+        return "bg-yellow-500";
       default:
         return "bg-gray-500";
     }
