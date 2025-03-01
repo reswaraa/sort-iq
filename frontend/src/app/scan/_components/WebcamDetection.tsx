@@ -148,14 +148,6 @@ const WebcamDetection: React.FC<WebcamDetectionProps> = ({
     }
   }, [isDetecting, onDetection, detectionInterval]);
 
-  const detectObjects = useCallback(() => {
-    if (useBackend) {
-      return detectObjectsServerSide();
-    } else {
-      return detectObjectsClientSide();
-    }
-  }, [useBackend, detectObjectsClientSide, detectObjectsServerSide]);
-
   useEffect(() => {
     const detectionTimer: NodeJS.Timeout | null = null;
 

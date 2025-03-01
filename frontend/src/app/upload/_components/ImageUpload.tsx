@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 
 interface ImageUploadProps {
   onImageCapture: (imageData: string) => void;
@@ -47,10 +48,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {previewUrl ? (
         <div className="w-full mb-4">
-          <img
+          <Image
             src={previewUrl}
             alt="Waste preview"
             className="rounded-lg mx-auto max-h-64 object-contain"
+            layout="responsive"
+            width={500}
+            height={500}
           />
         </div>
       ) : (
