@@ -3,7 +3,7 @@ import {
   ClassificationResponse,
   getCategoryLabel,
   getCategoryColor,
-} from '../types';
+} from '../../../types';
 
 interface ClassificationResultProps {
   result: ClassificationResponse;
@@ -66,7 +66,7 @@ const ClassificationResult: React.FC<ClassificationResultProps> = ({
               <span className="text-gray-700 font-medium">Confidence:</span>
               <div className="w-2/3 bg-gray-200 rounded-full h-4 overflow-hidden">
                 <div
-                  className="bg-blue-500 h-full rounded-full"
+                  className="bg-green-500 h-full rounded-full"
                   style={{ width: `${confidencePercentage}%` }}
                 ></div>
               </div>
@@ -114,7 +114,7 @@ const ClassificationResult: React.FC<ClassificationResultProps> = ({
             </button>
             <button
               onClick={onNext}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition"
             >
               Next Item
             </button>

@@ -1,10 +1,10 @@
-import React from "react";
+import React from 'react';
 import {
   WasteCategory,
   WeightSummaryResponse,
   getCategoryLabel,
   getCategoryColor,
-} from "../types";
+} from '../../../types';
 
 interface SummaryDisplayProps {
   summary: WeightSummaryResponse;
@@ -28,18 +28,18 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({ summary }) => {
     const color = getCategoryColor(category);
 
     switch (color) {
-      case "red":
-        return "bg-red-500";
-      case "blue":
-        return "bg-blue-500";
-      case "green":
-        return "bg-green-500";
-      case "orange":
-        return "bg-orange-500";
-      case "yellow":
-        return "bg-yellow-500";
+      case 'red':
+        return 'bg-red-500';
+      case 'blue':
+        return 'bg-blue-500';
+      case 'green':
+        return 'bg-green-500';
+      case 'orange':
+        return 'bg-orange-500';
+      case 'yellow':
+        return 'bg-yellow-500';
       default:
-        return "bg-gray-500";
+        return 'bg-gray-500';
     }
   };
 
@@ -60,7 +60,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({ summary }) => {
               <span>
                 {summary.weights[category]
                   ? summary.weights[category].toFixed(2)
-                  : "0.00"}{" "}
+                  : '0.00'}{' '}
                 kg ({getPercentage(category).toFixed(1)}%)
               </span>
             </div>

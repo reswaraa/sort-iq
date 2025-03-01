@@ -84,8 +84,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         onClick={handleCaptureClick}
         disabled={isLoading}
         className={`
-          px-4 py-2 bg-blue-500 text-white rounded-lg 
-          ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'} 
+          px-4 py-2 bg-green-500 text-white rounded-lg 
+          ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'} 
           transition
         `}
       >

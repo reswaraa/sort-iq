@@ -1,6 +1,6 @@
 import React from 'react';
-import { wasteAPI } from '../services/api';
-import { WeightSummaryResponse } from '../types';
+import { wasteAPI } from '../../../services/api';
+import { WeightSummaryResponse } from '../../../types';
 
 interface StartScreenProps {
   onStart: () => void;
@@ -25,7 +25,9 @@ const StartScreen: React.FC<StartScreenProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
-      <h1 className="text-4xl font-bold mb-6">Smart Waste Bin</h1>
+      <h1 className="text-4xl font-bold mb-6 text-green-700">
+        Static Waste Classification
+      </h1>
       <p className="text-xl mb-8 max-w-md">
         Upload pictures of waste items to classify them and track waste
         management data.
@@ -34,7 +36,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
       <div className="space-y-4">
         <button
           onClick={handleStart}
-          className="px-8 py-3 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition"
+          className="px-8 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition"
         >
           Start New Session
         </button>
@@ -44,8 +46,8 @@ const StartScreen: React.FC<StartScreenProps> = ({
         <p>
           This prototype uses AI to classify waste into four categories:
           <br />
-          E-waste, Non-organic, Organic (Vegetable/Fruit), and Organic
-          (Dairy/Meat).
+          Usable Electronic Waste, Non-usable Electronic Waste, Non-organic
+          Waste, Biogas, Compost.
         </p>
       </div>
     </div>

@@ -3,7 +3,7 @@ import {
   ClassificationResponse,
   WasteCategory,
   getCategoryLabel,
-} from '../types';
+} from '../../../types';
 
 interface WeightInputProps {
   classification: ClassificationResponse;
