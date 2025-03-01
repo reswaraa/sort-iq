@@ -31,21 +31,20 @@ class WasteClassifier:
         self.ewaste_model.eval()
 
         # Organic / Non Organic / E-waste segregation model
-        self.general_model = custom_model()
+        self.general_model = custom_model
 
-        #Load the state dictionary
-        state_dict2 = torch.load("sortng_models/custom_cnn.keras")
+        # Load the state dictionary
+        state_dict2 = torch.load("sorting_models/custom_cnn.keras")
         self.general_model.load_state_dict(state_dict2)
         self.general_model.eval()
 
-        #Organic waste segregation model
+        # Organic waste segregation model
         self.organic_processor = AutoImageProcessor.from_pretrained(
             "Kaludi/food-category-classification-v2.0"
         )
         self.organic_model = TFAutoModelForImageClassification.from_pretrained(
-            "Kaludi/food-category-classification-v2.0", from_pt = True
+            "Kaludi/food-category-classification-v2.0", from_pt=True
         )
-        
         
         self.categories = [
             WasteCategory.E_WASTE_USEFUL,
@@ -89,31 +88,29 @@ class WasteClassifier:
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
 
-            general_labels = ["E-waste", "Non-organic","Organic"]
-            general_image_tensor = general_transform(image)
-            general_input = self.general_model(images = general_image_tensor)
-            general_outputs = self.general_model(**general_input)
-            general_probs = tf.nn.softmax(general_outputs.logits,axis=-1)
-            general_predicted_class = tf.argmax(probs, axis=-1).numpy()[0]
-            general_predicted_label = self.organic_model.config.id2label[general_predicted_class]
-            general_confidence = probs[0][general_predicted_class].numpy()
+            general_labels = ["E-waste", "Non-organic", "Organic"]
+            general_image_tensor = general_transform(image).unsqueeze(0)
+            with torch.no_grad():
+                general_outputs = self.general_model(general_image_tensor)
+                general_probs = torch.nn.functional.softmax(general_outputs[0], dim=0)
+                general_predicted_class = torch.argmax(general_probs).item()
+                general_confidence = general_probs[general_predicted_class].item()
             
-            general_class = general_labels[general_predicted_label]
+            general_class = general_labels[general_predicted_class]
             if general_class == "Non-organic":
                 category = WasteCategory.NON_ORGANIC
-                return{
-                    "category" : category,
-                    "confidence" : confidence,
-                    "recyclable" : self.recyclable_map[category],
-                    "error" : None
+                return {
+                    "category": category,
+                    "confidence": general_confidence,
+                    "recyclable": self.recyclable_map[category],
+                    "error": None
                 }
             elif general_class == "E-waste":
                 # Divide the type of e-waste
-                image_tensor = general_transform(image).unsqueeze(0)
-                class_labels = ["Battery","Metal"]
+                class_labels = ["Battery", "Metal"]
                 with torch.no_grad():
-                    outputs = self.ewaste_model(image_tensor)
-                    probs = torch.nn.functional.softmax(outputs[0],dim=0)
+                    outputs = self.ewaste_model(general_image_tensor)
+                    probs = torch.nn.functional.softmax(outputs[0], dim=0)
                     predicted_ewaste_label = torch.argmax(probs).item()
                     confidence = probs[predicted_ewaste_label].item()
 
@@ -133,15 +130,15 @@ class WasteClassifier:
                     "error": None
                 }
             else:
-                #Divide organic compost and organic biogas
-                inputs = self.organic_processor(images = image, return_tensors='tf')
+                # Divide organic compost and organic biogas
+                inputs = self.organic_processor(images=image, return_tensors='tf')
                 outputs = self.organic_model(**inputs)
-                probs = tf.nn.softmax(outputs.logits,axis=-1)
+                probs = tf.nn.softmax(outputs.logits, axis=-1)
                 predicted_class = tf.argmax(probs, axis=-1).numpy()[0]
                 predicted_label = self.organic_model.config.id2label[predicted_class]
                 confidence = probs[0][predicted_class].numpy()
-                compostLabel = ["Vegetable","Fruit","Eggs","Bread","Noodles","Rice"]
-                biogasLabel = ["Dairy, Dessert","Fried Food", "Meat", "Seafood", "Soup"]
+                compostLabel = ["Vegetable", "Fruit", "Eggs", "Bread", "Noodles", "Rice"]
+                biogasLabel = ["Dairy, Dessert", "Fried Food", "Meat", "Seafood", "Soup"]
                 
                 if predicted_label in compostLabel:
                     category = WasteCategory.COMPOST
