@@ -4,7 +4,7 @@ export enum WasteCategory {
   NON_ORGANIC = 'non-organic',
   BIOGAS = 'biogas',
   COMPOST = 'compost',
-  UNKNOWN = 'unknown',
+  OTHERS = 'others',
 }
 
 export interface Detection {
@@ -27,7 +27,7 @@ export const wasteCategoryColors: Record<WasteCategory, string> = {
   [WasteCategory.NON_ORGANIC]: 'bg-blue-500',
   [WasteCategory.BIOGAS]: 'bg-yellow-500',
   [WasteCategory.COMPOST]: 'bg-lime-600',
-  [WasteCategory.UNKNOWN]: 'bg-gray-500',
+  [WasteCategory.OTHERS]: 'bg-gray-500',
 };
 
 export const wasteCategoryBorderColors: Record<WasteCategory, string> = {
@@ -36,7 +36,7 @@ export const wasteCategoryBorderColors: Record<WasteCategory, string> = {
   [WasteCategory.NON_ORGANIC]: 'rgba(59, 130, 246, 0.8)',
   [WasteCategory.BIOGAS]: 'rgba(234, 179, 8, 0.8)',
   [WasteCategory.COMPOST]: 'rgba(101, 163, 13, 0.8)',
-  [WasteCategory.UNKNOWN]: 'rgba(107, 114, 128, 0.8)',
+  [WasteCategory.OTHERS]: 'rgba(107, 114, 128, 0.8)',
 };
 
 export const wasteCategoryDescriptions: Record<WasteCategory, string> = {
@@ -47,7 +47,7 @@ export const wasteCategoryDescriptions: Record<WasteCategory, string> = {
   [WasteCategory.NON_ORGANIC]: 'Materials like plastic, glass, or paper',
   [WasteCategory.BIOGAS]: 'Organic waste suitable for biogas production',
   [WasteCategory.COMPOST]: 'Plant-based waste suitable for composting',
-  [WasteCategory.UNKNOWN]: 'Unable to classify this waste',
+  [WasteCategory.OTHERS]: 'Unable to classify this waste',
 };
 
 // Mapping from model classes to waste categories

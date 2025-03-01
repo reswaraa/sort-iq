@@ -10,9 +10,8 @@ import time
 import os
 from app.models.detection import ObjectDetector
 
-app = FastAPI(title="Smart Waste Classifier API")
+app = FastAPI(title="Sort-IQ Waste Classifier API")
 
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # For development - restrict this in production
@@ -21,14 +20,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the YOLOv8 detector
 detector = None
 
 @app.on_event("startup")
 async def startup_event():
     global detector
     try:
-        # Initialize the object detector
         detector = ObjectDetector(model_path="yolov8n.pt", confidence_threshold=0.25)
         print("YOLOv8 model loaded successfully")
     except Exception as e:
@@ -36,7 +33,7 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    return {"message": "Smart Waste Classifier API is running"}
+    return {"message": "Sort-IQ Waste Classifier API is running"}
 
 @app.post("/detect")
 async def detect_waste(file: UploadFile = File(...)):
@@ -44,16 +41,13 @@ async def detect_waste(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="No file uploaded")
     
     try:
-        # Read image file
         contents = await file.read()
         
-        # Run detection
         if detector is None:
             raise HTTPException(status_code=500, detail="Model not loaded")
         
         detections = detector.detect_from_image(contents)
         
-        # Return the detections
         if detections:
             detections.sort(key=lambda x: x["confidence"], reverse=True)
             top_detection = detections[0]
@@ -79,16 +73,13 @@ async def detect_waste_base64(data: dict = Body(...)):
         raise HTTPException(status_code=400, detail="No image data provided")
     
     try:
-        # Extract base64 string
         base64_image = data["image"]
         
-        # Run detection
         if detector is None:
             raise HTTPException(status_code=500, detail="Model not loaded")
         
         detections = detector.detect_from_base64(base64_image)
         
-        # Return the detections
         if detections:
             detections.sort(key=lambda x: x["confidence"], reverse=True)
             top_detection = detections[0]

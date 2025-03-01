@@ -67,14 +67,12 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, isLoading }) => {
 
   const categoryColor =
     wasteCategoryColors[top_detection.waste_category] ||
-    wasteCategoryColors[WasteCategory.UNKNOWN];
+    wasteCategoryColors[WasteCategory.OTHERS];
   const categoryDescription =
     wasteCategoryDescriptions[top_detection.waste_category] || '';
 
-  // Calculate a confidence percentage
   const confidencePercentage = Math.round(top_detection.confidence * 100);
 
-  // Function to render the appropriate icon based on waste category
   const renderCategoryIcon = (category: WasteCategory) => {
     switch (category) {
       case WasteCategory.E_WASTE_USEFUL:

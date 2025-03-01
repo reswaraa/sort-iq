@@ -10,7 +10,7 @@ export default function Home() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [result, setResult] = useState<ClassificationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [useBackend, setUseBackend] = useState(false); // Whether to use YOLOv8 backend
+  const [useBackend, setUseBackend] = useState(false);
 
   const handleStartDetection = () => {
     setIsDetecting(true);
@@ -73,7 +73,7 @@ export default function Home() {
                 onDetection={handleDetection}
                 isDetecting={isDetecting}
                 useBackend={useBackend}
-                detectionInterval={500} // 2 FPS for backend detection to reduce API load
+                detectionInterval={500}
               />
             </div>
 
