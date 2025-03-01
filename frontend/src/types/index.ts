@@ -64,7 +64,7 @@ export const getCategoryColor = (category: WasteCategory | null): string => {
     case WasteCategory.E_WASTE_USEFUL:
       return 'red';
     case WasteCategory.E_WASTE_NOT_USEFUL:
-      return 'orange';
+      return 'yellow';
     case WasteCategory.NON_ORGANIC:
       return 'blue';
     case WasteCategory.BIOGAS:
