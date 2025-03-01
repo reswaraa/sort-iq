@@ -4,13 +4,14 @@ import random
 from PIL import Image
 from app.models.schemas import WasteCategory
 from transformers import AutoImageProcessor, TFAutoModelForImageClassification
+import tensorflow as tf
 
 class WasteClassifier:
     """
     Waste classification service simulation.
     todo: use the Hugging Face model.
     """
-    
+
     def __init__(self):
         # todo: load the model
         
@@ -53,32 +54,26 @@ class WasteClassifier:
             raise ValueError(f"Invalid image data: {str(e)}")
     
     def classify(self, base64_image: str):
-        """
-        Classify a waste image.
-        
-        For now, we're simulating the classification:
-        - Random category
-        - Random confidence level
-        - Determine recyclability based on category
-        """
         try:
-            # todo: process the image here
-            # For now, we just decode it to validate it's a proper image
             image = self.decode_image(base64_image)
+            inputs = self.organic_processor(images = image, return_tensors='tf')
+            outputs = self.organic_model(**inputs)
+            probs = tf.nn.softmax(outputs.logits,axis=-1)
+            predicted_class = tf.argmax(probs, axis=-1).numpy()[0]
+            predicted_label = self.organic_model.config.id2label[predicted_class]
+            confidence = probs[0][predicted_class].numpy()
+            compostLabel = ["Vegetable","Fruit","Eggs","Bread","Noodles","Rice"]
+            biogasLabel = ["Dairy, Dessert","Fried Food", "Meat", "Seafood", "Soup"]
             
-            # Simulate classification
-            category = random.choice(self.categories)
-            
-            # Generate a random confidence level
-            confidence = random.uniform(0.5, 0.95)
-            
-            # Determine if the waste is recyclable based on its category
-            recyclable = self.recyclable_map[category]
+            if predicted_label in compostLabel:
+                category = WasteCategory.COMPOST
+            elif predicted_label in biogasLabel:
+                category = WasteCategory.BIOGAS
             
             return {
                 "category": category,
                 "confidence": confidence,
-                "recyclable": recyclable,
+                "recyclable": self.recyclable_map[category],
                 "error": None
             }
             
