@@ -20,10 +20,8 @@ The application offers two major functionalities:
 ### 2. Static Waste Classification with Sort-IQ Analytics
 
 - Upload images of waste items for classification
-- LLM-powered analytical recommendations based on classification results
 - Detailed breakdown of detected waste materials
-- Actionable recommendations for proper disposal and recycling
-- Environmental impact insights
+- Trackable total weight
 
 ## Waste Categories
 
