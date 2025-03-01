@@ -1,72 +1,35 @@
-// Enum for waste categories
-export enum WasteCategory {
-  E_WASTE = 'e-waste',
-  NON_ORGANIC = 'non-organic',
-  ORGANIC_VEGETABLE_FRUIT = 'organic-vegetable-fruit',
-  ORGANIC_DAIRY_MEAT = 'organic-dairy-meat',
-}
+export type WasteCategory =
+  | 'E-waste'
+  | 'Non-organic'
+  | 'Organic (Vegetable and Fruit)'
+  | 'Organic (Dairy and Meat)'
+  | 'Unknown';
 
-// Classification response from the API
-export interface ClassificationResponse {
-  category: WasteCategory | null;
+export interface Detection {
+  class_name: string;
+  waste_category: WasteCategory;
   confidence: number;
-  recyclable: boolean | null;
-  error: string | null;
 }
 
-// Interface for weight update request
-export interface WeightUpdateRequest {
-  category: WasteCategory;
-  weight: number;
+export interface ClassificationResponse {
+  success: boolean;
+  top_detection?: Detection;
+  all_detections?: Detection[];
+  message: string;
 }
 
-// Interface for weight summary response
-export interface WeightSummaryResponse {
-  weights: Record<WasteCategory, number>;
-  total_weight: number;
-}
-
-// App state interface
-export interface AppState {
-  step: 'start' | 'upload' | 'result' | 'weight';
-  currentImage: string | null;
-  currentClassification: ClassificationResponse | null;
-  weightSummary: WeightSummaryResponse | null;
-  isLoading: boolean;
-  error: string | null;
-}
-
-// Helper functions for category display
-export const getCategoryLabel = (category: WasteCategory | null): string => {
-  if (!category) return 'Unknown';
-
-  switch (category) {
-    case WasteCategory.E_WASTE:
-      return 'Electronic Waste';
-    case WasteCategory.NON_ORGANIC:
-      return 'Non-organic Waste';
-    case WasteCategory.ORGANIC_VEGETABLE_FRUIT:
-      return 'Organic Waste (Vegetable/Fruit)';
-    case WasteCategory.ORGANIC_DAIRY_MEAT:
-      return 'Organic Waste (Dairy/Meat)';
-    default:
-      return 'Unknown';
-  }
+export const wasteCategoryColors = {
+  'E-waste': 'bg-e-waste',
+  'Non-organic': 'bg-non-organic',
+  'Organic (Vegetable and Fruit)': 'bg-organic-vf',
+  'Organic (Dairy and Meat)': 'bg-organic-dm',
+  Unknown: 'bg-unknown',
 };
 
-export const getCategoryColor = (category: WasteCategory | null): string => {
-  if (!category) return 'gray';
-
-  switch (category) {
-    case WasteCategory.E_WASTE:
-      return 'red';
-    case WasteCategory.NON_ORGANIC:
-      return 'blue';
-    case WasteCategory.ORGANIC_VEGETABLE_FRUIT:
-      return 'green';
-    case WasteCategory.ORGANIC_DAIRY_MEAT:
-      return 'orange';
-    default:
-      return 'gray';
-  }
+export const wasteCategoryDescriptions = {
+  'E-waste': 'Electronic waste that requires special handling',
+  'Non-organic': 'Materials like plastic, glass, or paper',
+  'Organic (Vegetable and Fruit)': 'Compostable plant-based materials',
+  'Organic (Dairy and Meat)': 'Animal products requiring separate handling',
+  Unknown: 'Unable to classify this waste',
 };
