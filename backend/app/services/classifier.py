@@ -5,10 +5,10 @@ from PIL import Image
 from app.models.schemas import WasteCategory
 from transformers import AutoImageProcessor, TFAutoModelForImageClassification
 import tensorflow as tf
-from tensorflow import keras
 from torchvision import models
 import torchvision.transforms as transforms
 import torch
+from sorting_models.skeleton_model import custom_model
 
 class WasteClassifier:
     """
@@ -26,12 +26,17 @@ class WasteClassifier:
         self.ewaste_model.fc = torch.nn.Linear(self.ewaste_model.fc.in_features, num_classes)
     
         # Load the state dictionary
-        state_dict = torch.load("sorting_models/trained_resnet18.keras")
-        self.ewaste_model.load_state_dict(state_dict)
+        state_dict1 = torch.load("sorting_models/trained_resnet18.keras")
+        self.ewaste_model.load_state_dict(state_dict1)
         self.ewaste_model.eval()
 
         # Organic / Non Organic / E-waste segregation model
-        model = keras.models.load_model("sorting_models/custom_cnn.keras", compile=False)
+        self.general_model = custom_model()
+
+        #Load the state dictionary
+        state_dict2 = torch.load("sortng_models/custom_cnn.keras")
+        self.general_model.load_state_dict(state_dict2)
+        self.general_model.eval()
 
         #Organic waste segregation model
         self.organic_processor = AutoImageProcessor.from_pretrained(
@@ -44,7 +49,7 @@ class WasteClassifier:
         
         self.categories = [
             WasteCategory.E_WASTE_USEFUL,
-               WasteCategory.E_WASTE_NOT_USEFUL,
+            WasteCategory.E_WASTE_NOT_USEFUL,
             WasteCategory.NON_ORGANIC,
             WasteCategory.BIOGAS,
             WasteCategory.COMPOST
