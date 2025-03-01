@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { ClassificationResponse } from '@/types';
 
+// Configure the API
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const api = axios.create({
@@ -14,7 +15,7 @@ export const classifyWasteFromBase64 = async (
   base64Image: string
 ): Promise<ClassificationResponse> => {
   try {
-    const response = await api.post('/classify-base64', { image: base64Image });
+    const response = await api.post('/detect-base64', { image: base64Image });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
@@ -29,7 +30,7 @@ export const classifyWasteFromBase64 = async (
     console.error('Unexpected error:', error);
     return {
       success: false,
-      message: 'Unable to connect to classification service',
+      message: 'Unable to connect to detection service',
     };
   }
 };
