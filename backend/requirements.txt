@@ -11,3 +11,5 @@ pydantic==2.4.2
 requests==2.31.0
 aiofiles==23.2.1
 opencv-python==4.8.1.78
+torchvision==0.16.0
+python-dotenv==1.0.0
