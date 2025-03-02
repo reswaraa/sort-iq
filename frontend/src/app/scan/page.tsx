@@ -236,10 +236,10 @@ export default function Home() {
                 Real-time Object Detection
               </h3>
               <p className="text-gray-600">
-                Our smart bin uses TensorFlow.js and a pre-trained COCO-SSD
-                model to detect objects in real-time directly in your browser.
-                The model identifies common household items and classifies them
-                into appropriate waste categories.
+                Our smart bin uses TensorFlow.js and COCO-SSD model to detect
+                objects in real-time directly in your browser. The model
+                identifies common items and classifies them into appropriate
+                waste categories.
               </p>
             </div>
             <div>
