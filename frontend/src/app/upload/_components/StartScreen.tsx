@@ -1,6 +1,8 @@
 import React from 'react';
 import { wasteAPI } from '@/services/upload/api';
 import { WeightSummaryResponse } from '@/types/upload/index';
+import { notifyError, notifySuccess, handleApiError } from './ToastProvider';
+import { AxiosError } from 'axios';
 
 interface StartScreenProps {
   onStart: () => void;
@@ -16,9 +18,11 @@ const StartScreen: React.FC<StartScreenProps> = ({
       const summary = await wasteAPI.resetWeights();
       onWeightSummaryUpdate(summary);
       onStart();
+      notifySuccess('New session started successfully!');
     } catch (error) {
       console.error('Error starting new session:', error);
-      // Start anyway even if reset fails
+      const errorType = handleApiError(error as AxiosError);
+      notifyError({ type: errorType });
       onStart();
     }
   };

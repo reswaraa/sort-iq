@@ -1,10 +1,14 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
+import { notifyError, notifyWarning } from './ToastProvider';
 
 interface ImageUploadProps {
   onImageCapture: (imageData: string) => void;
   isLoading: boolean;
 }
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FORMATS = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
   onImageCapture,
@@ -17,23 +21,61 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Create a preview URL for the image
+    if (file.size > MAX_FILE_SIZE) {
+      notifyError({
+        type: 'image',
+        message: 'Image is too large. Please upload an image less than 5MB.',
+      });
+      event.target.value = '';
+      return;
+    }
+
+    if (!ALLOWED_FORMATS.includes(file.type)) {
+      notifyWarning(
+        'Unsupported image format. Please use JPEG, PNG, WebP, or HEIC formats.'
+      );
+      event.target.value = '';
+      return;
+    }
+
     const fileUrl = URL.createObjectURL(file);
     setPreviewUrl(fileUrl);
 
-    // Convert to base64
     const reader = new FileReader();
     reader.onload = (e) => {
-      const base64String = e.target?.result as string;
-      // Pass the base64 data to the parent component
-      onImageCapture(base64String);
+      try {
+        const base64String = e.target?.result as string;
+        onImageCapture(base64String);
+      } catch (error) {
+        console.error('Error processing image:', error);
+        notifyError({
+          type: 'image',
+          message: 'Failed to process the image. Please try a different file.',
+        });
+      }
     };
+
+    reader.onerror = () => {
+      notifyError({
+        type: 'image',
+        message: 'Failed to read the image file. Please try again.',
+      });
+    };
+
     reader.readAsDataURL(file);
   };
 
   const handleCaptureClick = () => {
     fileInputRef.current?.click();
   };
+
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 w-full max-w-lg mx-auto">
@@ -52,9 +94,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             src={previewUrl}
             alt="Waste preview"
             className="rounded-lg mx-auto max-h-64 object-contain"
-            layout="responsive"
             width={500}
             height={500}
+            onError={() => {
+              notifyError({
+                type: 'image',
+                message: 'Failed to display the image. Please try another one.',
+              });
+              setPreviewUrl(null);
+            }}
           />
         </div>
       ) : (

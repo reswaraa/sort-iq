@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ClassificationResponse, getCategoryLabel } from '@/types/upload/index';
+import { notifyWarning } from './ToastProvider';
 
 interface WeightInputProps {
   classification: ClassificationResponse;
@@ -22,12 +23,34 @@ const WeightInput: React.FC<WeightInputProps> = ({
     if (/^\d*\.?\d*$/.test(value) || value === '') {
       setWeight(value);
       setError(null);
+    } else {
+      // Don't update state but show the error
+      notifyWarning('Please enter only numbers with up to one decimal point.');
     }
+  };
+
+  const validateWeight = (weightValue: number): boolean => {
+    // Check if weight is reasonable (less than 100kg)
+    if (weightValue > 100) {
+      setError('Weight exceeds 100kg. Please verify the weight.');
+      notifyWarning('The entered weight seems unusually high. Please verify.');
+      return false;
+    }
+
+    // Check if weight is too precise (more than 2 decimal places)
+    const decimalPlaces = (weightValue.toString().split('.')[1] || '').length;
+    if (decimalPlaces > 2) {
+      setError('Please enter weight with up to 2 decimal places.');
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = () => {
     if (!weight || weight === '0' || weight === '0.0') {
       setError('Please enter a valid weight greater than zero');
+      notifyWarning('Weight must be greater than zero.');
       return;
     }
 
@@ -35,6 +58,12 @@ const WeightInput: React.FC<WeightInputProps> = ({
 
     if (isNaN(weightValue) || weightValue <= 0) {
       setError('Please enter a valid weight greater than zero');
+      notifyWarning('Weight must be greater than zero.');
+      return;
+    }
+
+    // Additional validation
+    if (!validateWeight(weightValue)) {
       return;
     }
 

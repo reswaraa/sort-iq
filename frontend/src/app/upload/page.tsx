@@ -7,11 +7,18 @@ import ClassificationResult from './_components/ClassificationResult';
 import WeightInput from './_components/WeightInput';
 import SummaryDisplay from './_components/SummaryDisplay';
 import { wasteAPI } from '@/services/upload/api';
+import { AxiosError } from 'axios';
 import {
   AppState,
   WeightSummaryResponse,
   WasteCategory,
 } from '@/types/upload/index';
+import {
+  ToastProvider,
+  notifyError,
+  notifySuccess,
+  handleApiError,
+} from './_components/ToastProvider';
 
 const initialState: AppState = {
   step: 'start',
@@ -32,6 +39,10 @@ export default function Home() {
         setState((prev) => ({ ...prev, weightSummary: summary }));
       } catch (error) {
         console.error('Error fetching weight summary:', error);
+        notifyError({
+          type: handleApiError(error as AxiosError),
+          message: 'Failed to load current waste summary data.',
+        });
       }
     };
 
@@ -59,12 +70,18 @@ export default function Home() {
         step: 'result',
         isLoading: false,
       }));
+
+      notifySuccess('Image successfully classified!');
     } catch (error) {
+      const errorType = handleApiError(error as AxiosError);
+
       setState((prev) => ({
         ...prev,
         error: 'Failed to classify image. Please try again.',
         isLoading: false,
       }));
+
+      notifyError({ type: errorType });
       console.log('Error classifying image:', error);
     }
   };
@@ -102,12 +119,18 @@ export default function Home() {
         step: 'upload',
         isLoading: false,
       }));
+
+      notifySuccess(`Weight of ${weight} kg added successfully!`);
     } catch (error) {
+      const errorType = handleApiError(error as AxiosError);
+
       setState((prev) => ({
         ...prev,
         error: 'Failed to update weight. Please try again.',
         isLoading: false,
       }));
+
+      notifyError({ type: errorType });
       console.log('Error updating weight:', error);
     }
   };
@@ -171,27 +194,29 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="container mx-auto">
-        <header className="flex justify-between items-center mb-8">
-          {state.step !== 'start' && (
-            <button
-              onClick={handleStopSession}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-            >
-              Stop Session
-            </button>
+    <ToastProvider>
+      <main className="min-h-screen bg-gray-50 p-4 md:p-8">
+        <div className="container mx-auto">
+          <header className="flex justify-between items-center mb-8">
+            {state.step !== 'start' && (
+              <button
+                onClick={handleStopSession}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              >
+                Stop Session
+              </button>
+            )}
+          </header>
+
+          <div className="mb-8">{renderStepContent()}</div>
+
+          {state.weightSummary && (
+            <div className="mt-12">
+              <SummaryDisplay summary={state.weightSummary} />
+            </div>
           )}
-        </header>
-
-        <div className="mb-8">{renderStepContent()}</div>
-
-        {state.weightSummary && (
-          <div className="mt-12">
-            <SummaryDisplay summary={state.weightSummary} />
-          </div>
-        )}
-      </div>
-    </main>
+        </div>
+      </main>
+    </ToastProvider>
   );
 }
