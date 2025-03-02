@@ -64,6 +64,8 @@ The system classifies waste into five distinct categories:
 
 ## Getting Started
 
+Disclaimer : To experience and use the web application smoothly, kindly run the website on local machine, following the instructions to run both the backend server and the front end.
+
 ### Prerequisites
 
 - Node.js (v16+)
